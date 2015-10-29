@@ -1,0 +1,42 @@
+#!/bin/sh
+
+# To override the default value of EDITORCMD, write this in your terminal, or config file (.bashrc, .xsessionrc, .profile)
+# export EDITORCMD=""
+
+
+EDITORCMD=`echo $EDITORCMD`
+
+
+if [ "x$EDITORCMD" = "x" ];
+then
+    # --- EDITORCMD not set
+
+    # EDITORCMD="gvim --servername '`basename "$1" .pdf`' --remote-tab-silent '+%l<Enter>' %f"
+    # EDITORCMD="gvim --servername '`basename "$1" .pdf`' --remote-silent '+%l<Enter>:match Search /\%%ll/' '%f'"
+    # EDITORCMD="gvim --remote-tab-silent '%f'"
+    EDITORCMD="gvim --remote-tab-silent '+%l<Enter>:match Search /\%%ll/' '%f'"
+else
+    echo "set" 
+fi
+
+
+
+PDFFILE="$1"
+if [ -f "$PDFFILE" ];then
+	# danke an Feuerfieber
+	# http://forum.ubuntuusers.de/topic/evince-synctex-vim-emacs-scite-lyx-kile-editor/#post-2841828
+	if [ -f "${PDFFILE%%.pdf}.synctex.gz" ];then
+        echo "backward:$PDFFILE"
+        echo "cmd:$EDITORCMD"
+		evince_backward_search "$PDFFILE" "$EDITORCMD"&
+		BACKWARD_SEARCH_PID=$!
+		echo $BACKWARD_SEARCH_PID
+	fi
+fi
+
+/usr/bin/evince "$@"
+
+if [ "$BACKWARD_SEARCH_PID" ];then
+	echo "Killing $BACKWARD_SEARCH_PID"
+	kill $BACKWARD_SEARCH_PID
+fi
